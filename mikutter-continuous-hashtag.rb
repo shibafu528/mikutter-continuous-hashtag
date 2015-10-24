@@ -53,45 +53,47 @@ Plugin.create :"mikutter-continuous-hashtag" do
     end
   end
 
-
   filter_posted do |service, messages|
-    begin
-      hashtags = messages[0][:entities][:hashtags].map { |hash| hash[:text]}
+    unless messages[0].retweet?
+      begin
+        
+        hashtags = messages[0][:entities][:hashtags].map { |hash| hash[:text]}
+        
+        if hashtags.length != 0
+          postbox = get_all_widgets(window, ::Gtk::PostBox)[0]
 
-      if hashtags.length != 0
-        postbox = get_all_widgets(window, ::Gtk::PostBox)[0]
+          before = ""
 
-        before = ""
+          if UserConfig[:continuos_hashtag_cr_before]
+            before += "\n"
+          end
 
-        if UserConfig[:continuos_hashtag_cr_before]
-          before += "\n"
+          if UserConfig[:continuos_hashtag_space_before]
+            before += " "
+          end
+
+          after = ""
+
+          if UserConfig[:continuos_hashtag_space_after]
+            after += " "
+          end
+
+          if UserConfig[:continuos_hashtag_cr_after]
+            after += "\n"
+          end
+
+          postbox.post.buffer.text = before + hashtags.map { |a| "\##{a}" }.join(" ") + after
+
+          if UserConfig[:continuos_hashtag_cursor_position] == 0
+            postbox.post.move_cursor(Gtk::MOVEMENT_BUFFER_ENDS, -1, false)
+          else
+            postbox.post.move_cursor(Gtk::MOVEMENT_BUFFER_ENDS, 0, false)
+          end
         end
-
-        if UserConfig[:continuos_hashtag_space_before]
-          before += " "
-        end
-
-        after = ""
-
-        if UserConfig[:continuos_hashtag_space_after]
-          after += " "
-        end
-
-        if UserConfig[:continuos_hashtag_cr_after]
-          after += "\n"
-        end
-
-        postbox.post.buffer.text = before + hashtags.map { |a| "\##{a}" }.join(" ") + after
-
-        if UserConfig[:continuos_hashtag_cursor_position] == 0
-          postbox.post.move_cursor(Gtk::MOVEMENT_BUFFER_ENDS, -1, false)
-        else
-          postbox.post.move_cursor(Gtk::MOVEMENT_BUFFER_ENDS, 0, false)
-        end
+      rescue => e
+        puts e
+        puts e.backtrace
       end
-    rescue => e
-      puts e
-      puts e.backtrace
     end
 
     [service, messages]
