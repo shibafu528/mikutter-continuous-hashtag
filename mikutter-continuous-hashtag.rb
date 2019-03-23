@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+require_relative 'regex'
 
 Plugin.create :"mikutter-continuous-hashtag" do
   window = nil
@@ -56,7 +57,7 @@ Plugin.create :"mikutter-continuous-hashtag" do
 
   filter_posted do |service, messages|
     begin
-      hashtags = messages[0][:entities][:hashtags].map { |hash| hash[:text]}
+      hashtags = Plugin::ContinuousHashtag::extract_hashtags(messages[0].description)
 
       if hashtags.length != 0
         postbox = get_all_widgets(window, ::Gtk::PostBox)[0]
